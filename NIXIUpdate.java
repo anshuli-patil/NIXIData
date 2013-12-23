@@ -9,7 +9,6 @@ import java.sql.Statement;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.jsoup.Jsoup;
@@ -18,7 +17,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 
-public class NIXIUpdate 
+public class CreateDB 
 {
 	static int currentversion;
 	static StringBuffer InsertQuery1 = new StringBuffer("insert into PathDB(version, Source, Region, ASName, IsSent");
@@ -27,12 +26,32 @@ public class NIXIUpdate
 	static int MaxHops = 24;
 	static String[] RegionList = {"Mumbai", "Delhi+(Noida)","Kolkata", "Hyderabad"};
 	
-	static void main() throws ClassNotFoundException, SQLException, HttpException, IOException  
+	public static void main(String args[]) 
 	{
-		setUpDatabase();
+		System.out.println("started main from NIXIpdate");
+		try {
+			setUpDatabase();
+		} catch (ClassNotFoundException e) {
+			
+			e.printStackTrace();
+		}
 		for(String Region: RegionList)
 		{
-			GetAllPaths(Region);
+			try {
+				GetAllPaths(Region);
+			} catch (HttpException e) {
+				
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			} catch (SQLException e) {
+				
+				e.printStackTrace();
+			}
 		}
 	}
 	 static void setUpDatabase() throws ClassNotFoundException
@@ -41,16 +60,18 @@ public class NIXIUpdate
 
 		try {
 			Class.forName("org.h2.Driver");
-			Connection conn = DriverManager.getConnection("jdbc:h2:~/NIXIProj", "sa", "");
+			Connection conn = DriverManager.getConnection("jdbc:h2:C:/Users/Anshuli-PC/workspace/ProjNetworking/NIXIProj", "sa", "");
 			Statement stat = conn.createStatement();
 
 			try
 			{
+				
 				stat.execute("create table PathDB(version int, id int primary key auto_increment, Source varchar(255), Region varchar(255), ASName varchar(255), IsSent Boolean, Network varchar(255), Hops int," +
 					"Hop1 varchar(255), Hop2 varchar(255), Hop3 varchar(255), Hop4 varchar(255), Hop5 varchar(255), " +
 					"Hop6 varchar(255), Hop7 varchar(255), Hop8 varchar(255), Hop9 varchar(255), Hop10 varchar(255), " +
 					"Hop11 varchar(255), Hop12 varchar(255), Hop13 varchar(255), Hop14 varchar(255), Hop15 varchar(255), " +
 					"Hop16 varchar(255), Hop17 varchar(255), Hop18 varchar(255), Hop19 varchar(255), Hop20 varchar(255), )");
+				System.out.println("Database table created");
 			}
 			catch(Exception e)
 			{
@@ -110,7 +131,7 @@ public class NIXIUpdate
 		String ISPName = null;
 		
 		Class.forName("org.h2.Driver");
-        Connection conn = DriverManager.getConnection("jdbc:h2:~/COP", "sa", "");
+        Connection conn = DriverManager.getConnection("jdbc:h2:C:/Users/Anshuli-PC/workspace/ProjNetworking/NIXIProj", "sa", "");
         Statement stat = conn.createStatement();
         
         ResultSet rs;
@@ -143,7 +164,7 @@ public class NIXIUpdate
 		
 		GetMethod method = new GetMethod(url);
 			Class.forName("org.h2.Driver");
-	        Connection conn = DriverManager.getConnection("jdbc:h2:~/COP", "sa", "");
+	        Connection conn = DriverManager.getConnection("jdbc:h2:C:/Users/Anshuli-PC/workspace/ProjNetworking/NIXIProj", "sa", "");
 	        Statement stat = conn.createStatement();
 			
 		
@@ -189,6 +210,7 @@ public class NIXIUpdate
 	    	      		{
 	    	      			MaxHops++;
 	    	      			stat.execute("alter Table PathDB add column Hop"+Integer.toString(MaxHops)+" varchar(255)");
+	    	      			System.out.println("inserted into table");
 	    	      		}
 	    	      	}
 	    	      	
@@ -210,6 +232,7 @@ public class NIXIUpdate
 	}
 	
 	
+	@SuppressWarnings("deprecation")
 	static void GetAllPaths(String Region) throws HttpException, IOException, ClassNotFoundException, SQLException
 	{	
 	    HttpClient client = new HttpClient();
@@ -219,17 +242,17 @@ public class NIXIUpdate
 	   PostMethod method = new PostMethod(url);
 	   
 	   //--deprecated
-	   //method.setRequestBody("query=summary&protocol=IPv4&addr=&router=NIXI+"+Region);	    
-	    NameValuePair[] params = null  ;
+	   method.setRequestBody("query=summary&protocol=IPv4&addr=&router=NIXI+"+Region);	    
+	   /* NameValuePair[] params = null  ;
 	    params[0]=new NameValuePair("query","summary");
 	    params[1]=new NameValuePair("protocol","IPv4");
 	    params[2]=new NameValuePair("addr","");
 	    params[3]=new NameValuePair("router","NIXI"+Region);
-	    method.setRequestBody(params);
+	    method.setRequestBody(params);*/
 	    
 	      // Execute the method.
 	      client.executeMethod(method);
-
+	      System.out.println("received response from NIXI looking glass");
 	      //Parse the response
 	      InputStream Body = method.getResponseBodyAsStream();	      
 	      Document doc = Jsoup.parse(Body, null, url);      
